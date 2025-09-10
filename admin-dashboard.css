@@ -287,13 +287,44 @@ hr {
     color: white; /* Change text color to white on hover */
 }
 
-/* ---------------------- TABLE */
-.table_responsive{
-    width: 100%; /* Takes full width of container minus 20px padding on each side */
-    padding: 15px;
-    overflow: auto;
+/* ---------------------- CHARTS */
+.charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    justify-content: center;
     margin: 0 auto;
-    box-sizing: border-box; /* Includes padding in the width calculation */
+    max-width: 1400px;
+}
+
+.chart-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: calc(50% - 20px);
+    min-width: 300px;
+    height: 400px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+}
+
+.chart-card h3 {
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+canvas {
+    width: 100% !important;
+    height: calc(100% - 50px) !important;
 }
 
 .table_responsive h1{

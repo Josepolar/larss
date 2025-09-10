@@ -5,6 +5,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="staff-userman.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .user-credential {
+            font-family: 'Consolas', monospace;
+            background-color: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-size: 0.9em;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .input-help {
+            display: block;
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
     <title>Staff Dashboard</title>
 </head>
 <body>
@@ -70,7 +94,8 @@
         $fname = $conn->real_escape_string($_POST['teacher_fname'] ?? '');
         $lname = $conn->real_escape_string($_POST['teacher_lname'] ?? '');
         $username = $conn->real_escape_string($_POST['teacher_username'] ?? '');
-        $email = $conn->real_escape_string($_POST['teacher_email'] ?? '');
+        // Create email based on username
+        $email = $username . "@lars.edu.ph";
         $password = password_hash($_POST['teacher_password'] ?? '', PASSWORD_DEFAULT);
         $role_id = 3; // Teacher
 
@@ -122,8 +147,9 @@
         $user_id = $conn->real_escape_string($_POST['user_id']);
         $fname = $conn->real_escape_string($_POST['edit_fname']);
         $lname = $conn->real_escape_string($_POST['edit_lname']);
-        $email = $conn->real_escape_string($_POST['edit_email']);
         $username = $conn->real_escape_string($_POST['edit_username']);
+        // Update email to match username format
+        $email = $username . "@lars.edu.ph";
         $grade = isset($_POST['edit_grade']) ? $conn->real_escape_string($_POST['edit_grade']) : null;
         
         // Check if username already exists for other users
@@ -241,7 +267,8 @@
         $fname = $conn->real_escape_string($_POST['student_fname'] ?? '');
         $lname = $conn->real_escape_string($_POST['student_lname'] ?? '');
         $username = $conn->real_escape_string($_POST['student_username'] ?? '');
-        $email = $conn->real_escape_string($_POST['student_email'] ?? '');
+        // Create email based on username
+        $email = $username . "@lars.edu.ph";
         $password = password_hash($_POST['student_password'] ?? '', PASSWORD_DEFAULT);
         $grade = $conn->real_escape_string($_POST['student_grade'] ?? '');
         $role_id = 4; // Student
@@ -299,12 +326,15 @@
 
             <label>Username</label>
             <input type="text" name="teacher_username" placeholder="Enter username" required>
-
-            <label>Email</label>
-            <input type="email" name="teacher_email" placeholder="Enter email" required>
+            <small class="input-help">Email will be automatically generated as username@lars.edu.ph</small>
 
             <label>Password</label>
-            <input type="password" name="teacher_password" placeholder="Enter password" required>
+            <div class="password-container">
+                <input type="password" name="teacher_password" id="teacher_password" placeholder="Enter password" required>
+                <span class="password-toggle" onclick="togglePasswordVisibility('teacher_password')">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
             <BR>
             <div class="modal-footer">
                 <button type="submit" name="add_teacher" class="create-btn">Create</button>
@@ -354,16 +384,17 @@
                 <div class="input-group">
                     <label for="student_username">Username</label>
                     <input type="text" id="student_username" name="student_username" placeholder="Enter username" required>
-                </div>
-
-                <div class="input-group">
-                    <label for="student_email">Email</label>
-                    <input type="email" id="student_email" name="student_email" placeholder="Enter email" required>
+                    <small class="input-help">Email will be automatically generated as username@lars.edu.ph</small>
                 </div>
 
                 <div class="input-group">
                     <label for="student_password">Password</label>
-                    <input type="password" id="student_password" name="student_password" placeholder="Enter password" required>
+                    <div class="password-container">
+                        <input type="password" id="student_password" name="student_password" placeholder="Enter password" required>
+                        <span class="password-toggle" onclick="togglePasswordVisibility('student_password')">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="button-group">
@@ -444,7 +475,7 @@
                 ?>
             </tbody>
         </table>
-    </div>
+    </div> 
 
     <!-- Students Table -->
     <div class="table_responsive" style="flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -462,25 +493,27 @@
         <table style="width: 100%;">
             <thead>
                 <tr>
-                    <th>Student Name</th>
+                    <th>Name</th>
                     <th>Grade</th>
-                    <th>Email</th>
                     <th>Username</th>
+                    <th>Email</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody class="student-list">
                 <?php
                 // Fetch students
-                $studentQuery = "SELECT user_id, first_name, last_name, email, username, grade_level FROM users WHERE role_id = 4 ORDER BY grade_level, last_name";
+                $studentQuery = "SELECT user_id, first_name, last_name, username, grade_level FROM users WHERE role_id = 4 ORDER BY grade_level, last_name";
                 $studentResult = $conn->query($studentQuery);
                 if ($studentResult && $studentResult->num_rows > 0) {
                     while ($row = $studentResult->fetch_assoc()) {
+                        // Generate email from username
+                        $email = $row['username'] . "@lars.edu.ph";
                         echo "<tr>";
                         echo "<td>" . htmlspecialchars($row['first_name'] . " " . $row['last_name']) . "</td>";
                         echo "<td>Grade " . htmlspecialchars($row['grade_level']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-                        echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                        echo "<td><span class='user-credential'>" . htmlspecialchars($row['username']) . "</span></td>";
+                        echo "<td><span class='user-credential'>" . htmlspecialchars($email) . "</span></td>";
                         echo "<td style='white-space: nowrap;'>
                                 <button onclick=\"openEditModal('student', {$row['user_id']})\" class='action-btn edit-btn'>Edit</button>
                                 <button onclick=\"if(confirm('Are you sure you want to delete this student?')) deleteUser('student', {$row['user_id']})\" class='action-btn delete-btn'>Delete</button>
@@ -550,7 +583,22 @@
     </div>
 
     <script src="staff-userman.js"></script>
-
+    <script>
+        function togglePasswordVisibility(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const icon = event.currentTarget.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
  

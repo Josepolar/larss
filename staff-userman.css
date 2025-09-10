@@ -31,6 +31,30 @@ body {
     transition: var(--tran-05);
 }
 
+/* Password Toggle Styles */
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 35px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+}
+
+.password-toggle:hover {
+    color: #004b9c;
+}
+
 /* Modal Styles */
 .modal .modal-header {
     display: flex;

@@ -26,6 +26,7 @@ if ($result && $row = $result->fetch_assoc()) {
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="staff-dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <title>Staff Dashboard</title>
 </head>
 <body>
@@ -114,57 +115,47 @@ if ($result && $row = $result->fetch_assoc()) {
     </div>
 
 
-       <div class="table-container">
-  <div class="table_responsive">
-
-    <!-- Top controls (right aligned) -->
-    <div class="controls">
-      <div class="dropdown">
-        <button class="dropbtn">Teacher ▼</button>
-        <div class="dropdown-content">
-          <a>Teacher 1</a>
-          <a>Teacher 2</a>
-          <a>Teacher 3</a>
+       <div class="charts-container">
+            <div class="chart-card">
+                <h3>Student Distribution by Grade Level</h3>
+                <canvas id="gradeDistributionChart"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Subject Distribution</h3>
+                <canvas id="subjectDistributionChart"></canvas>
+            </div>
         </div>
-      </div>
 
-      <div class="dropdown">
-        <button class="dropbtn">Section ▼</button>
-        <div class="dropdown-content">
-          <a>Section 1</a>
-          <a>Section 2</a>
-          <a>Section 3</a>
-        </div>
-      </div>
+        <?php
+        // Fetch grade level distribution
+        $gradeQuery = "SELECT grade_level, COUNT(*) as count 
+                      FROM users 
+                      WHERE role_id = 4 
+                      GROUP BY grade_level 
+                      ORDER BY grade_level";
+        $gradeResult = $conn->query($gradeQuery);
+        $gradeCounts = [];
+        while ($row = $gradeResult->fetch_assoc()) {
+            $gradeCounts[$row['grade_level']] = $row['count'];
+        }
 
-      <button class="filter-btn">Filter</button>
-    </div>
+        // Fetch subject distribution
+        $subjectQuery = "SELECT subjects.subject_name, COUNT(DISTINCT teacher_subjects.teacher_id) as count 
+                        FROM subjects 
+                        LEFT JOIN teacher_subjects ON subjects.subject_id = teacher_subjects.subject_id 
+                        GROUP BY subjects.subject_id";
+        $subjectResult = $conn->query($subjectQuery);
+        $subjectCounts = [];
+        while ($row = $subjectResult->fetch_assoc()) {
+            $subjectCounts[$row['subject_name']] = $row['count'];
+        }
+        ?>
 
-    <!-- Table -->
-    <table>
-      <thead>
-        <tr>
-          <th>Student Name</th>
-          <th>Grade Level</th>
-          <th>Subject</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>John Doe</td>
-          <td>Grade 10</td>
-          <td>Math</td>
-        </tr>
-        <tr>
-          <td>Jane Smith</td>
-          <td>Grade 9</td>
-          <td>English</td>
-        </tr>
-      </tbody>
-    </table>
-
-  </div>
-</div>
+        <script>
+            var gradeData = <?php echo json_encode($gradeCounts); ?>;
+            var subjectData = <?php echo json_encode($subjectCounts); ?>;
+        </script>
 
 
         

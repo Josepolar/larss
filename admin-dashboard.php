@@ -44,6 +44,7 @@ if ($result) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="admin-dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Admin Dashboard</title>
 </head>
 <body>
@@ -123,57 +124,65 @@ if ($result) {
     </div>
 
 
-        <div class="table-container">
-            <div class="table-container">
-                <div class="table_responsive" style="display: flex; gap: 20px;">
-                    <div class="stat" style="flex:1;">
-                        <div class="stat-content">
-                            <h3>Staff Name</h3>
-                            <?php if ($staffCount): ?>
-                                <ul style="margin:0; padding-left:20px;">
-                                    <?php foreach ($staffNames as $name): ?>
-                                        <li><?= htmlspecialchars($name) ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            <?php else: ?>
-                                <p>No staff accounts.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="stat" style="flex:1;">
-                        <div class="stat-content">
-                            <h3>Teacher Name</h3>
-                            <?php if ($teacherCount): ?>
-                                <ul style="margin:0; padding-left:20px;">
-                                    <?php foreach ($teacherNames as $name): ?>
-                                        <li><?= htmlspecialchars($name) ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            <?php else: ?>
-                                <p>No teacher accounts.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="stat" style="flex:1;">
-                        <div class="stat-content">
-                            <h3>Student Name</h3>
-                            <?php if ($studentCount): ?>
-                                <ul style="margin:0; padding-left:20px;">
-                                    <?php foreach ($studentNames as $name): ?>
-                                        <li><?= htmlspecialchars($name) ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            <?php else: ?>
-                                <p>No student accounts.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
+        <div class="charts-container">
+            <!-- User Distribution Chart -->
+            <div class="chart-card">
+                <h3>User Distribution</h3>
+                <canvas id="userDistributionChart"></canvas>
             </div>
-                
 
+            <!-- Grade Level Distribution -->
+            <div class="chart-card">
+                <h3>Student Grade Distribution</h3>
+                <canvas id="gradeDistributionChart"></canvas>
+            </div>
 
+            <!-- Recent Activity Chart -->
+            <div class="chart-card">
+                <h3>User Activity</h3>
+                <canvas id="userActivityChart"></canvas>
+            </div>
         </div>
+
+        <?php
+        // Fetch grade level distribution
+        $gradeQuery = "SELECT grade_level, COUNT(*) as count 
+                      FROM users 
+                      WHERE role_id = 4 
+                      GROUP BY grade_level 
+                      ORDER BY grade_level";
+        $gradeResult = $conn->query($gradeQuery);
+        $gradeCounts = [];
+        while ($row = $gradeResult->fetch_assoc()) {
+            $gradeCounts[$row['grade_level']] = $row['count'];
+        }
+
+        // User distribution data
+        $userData = [
+            'Staff' => $staffCount,
+            'Teachers' => $teacherCount,
+            'Students' => $studentCount
+        ];
+
+        // Sample activity data (you can modify this to fetch real data from your database)
+        $activityData = [
+            'Logins' => 45,
+            'Updates' => 23,
+            'New Records' => 15
+        ];
+
+        // Convert PHP arrays to JSON for JavaScript
+        $gradeCountsJson = json_encode($gradeCounts);
+        $userDataJson = json_encode($userData);
+        $activityDataJson = json_encode($activityData);
+        ?>
+
+        <script>
+            // Pass PHP data to JavaScript
+            const gradeData = <?= $gradeCountsJson ?>;
+            const userData = <?= $userDataJson ?>;
+            const activityData = <?= $activityDataJson ?>;
+        </script>
         
 
     </section>
