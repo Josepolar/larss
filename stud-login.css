@@ -10,105 +10,130 @@
 
 /* Set background image */
 body {
-    margin: 0;
-    padding: 0;
-    background-image: url("assets/bgg.png"); /* Replace with your image filename */
-    background-size: cover;  /* Makes the image cover the screen */
-    background-position: center; /* Centers the image */
-    background-repeat: no-repeat; /* Prevents tiling */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* start from the top */
+    padding-top: 80px; /* controls spacing from top */
     height: 100vh;
-    overflow: hidden;
+    background-image: url("assets/dazsma.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0;
 }
 
-/* Content styling */
-.content {
-    text-align: center;
-    color: white;
-    background: rgba(0, 0, 0, 0); /* Adds transparent overlay for readability */
-    padding: 50px;
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1); /* Change opacity (0.5 = 50% transparent) */
+    z-index: -1; /* Keeps overlay behind content */
+}
+
+.login-container {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px 30px;
     border-radius: 15px;
-    margin: 20vh auto;
-    width: 60%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    width: 350px;
+    text-align: center;
+    margin-top: 125px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+        /* Fade-in animation */
+    opacity: 0;
+    transform: translateY(30px); /* slight slide from below */
+    animation: fadeInLogin 1s ease-out forwards;
 }
 
-
-.rightarr-img {
-    width: 1200px;       /* arrow size */
-    position: absolute;
-    top: 50%;
-    right: 300px;        /* move it to the right side */
-    transform: translateY(-50%);
-    animation: moveRightArrow 1s infinite ease-in-out;
+@keyframes fadeInLogin {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.leftarr-img {
-    width: 1200px;
-    position: absolute;
-    top: 50%;
-    left: 300px;         /* move it to the left side */
-    transform: translateY(-50%);
-    animation: moveLeftArrow 1s infinite ease-in-out;
+.lars-img {
+    width: 200px;
+    margin-bottom: 20px;
+    animation: pulseLars 2s infinite ease-in-out;
 }
 
-.rightarr-img,
-.leftarr-img {
-    z-index: 1; /* keep them behind */
+@keyframes pulseLars {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1); /* slight zoom in */
+    }
+    100% {
+        transform: scale(1);
+    }
 }
 
-
-.signin-img {
-    width: 450px;
-    position: absolute;
-    top: 43%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: pulseSignin 2s infinite ease-in-out;
-    cursor: pointer; /* pointer when hovering */
-    z-index: 10; /* put it above the arrows */
-}
-
-/* Stop animation on hover */
-.signin-img:hover {
+.lars-img:hover {
     animation-play-state: paused;
 }
 
-
-/* Keyframes for pulsing effect */
-@keyframes pulseSignin {
-    0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.05);
-    }
+.login-container h2 {
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #333;
 }
 
-
-@keyframes moveRightArrow {
-    0%, 100% {
-        transform: translateY(-50%) translateX(0);
-    }
-    50% {
-        transform: translateY(-50%) translateX(20px); /* moves slightly right */
-    }
+.login-container input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-/* Keyframes for left arrow */
-@keyframes moveLeftArrow {
-    0%, 100% {
-        transform: translateY(-50%) translateX(0);
-    }
-    50% {
-        transform: translateY(-50%) translateX(-20px); /* moves slightly left */
-    }
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #ffffff; /* pure white default */
+    color: #333; /* dark text for contrast */
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden; /* prevent overflow when animating */
+    position: relative;
+    transition: color 0.3s ease;
 }
 
-@keyframes pulseSignin {
-    0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.05); /* zooms in slightly */
-    }
+.login-container button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%; /* start completely hidden on the left */
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #f2211d, #f16409, #fad703, #11b01b);
+    transition: left 0.6s ease-in-out;
+    z-index: 0;
+}
+
+.login-container button:hover::before {
+    left: 0; /* slide the gradient fully over */
+}
+
+.login-container button span {
+    position: relative;
+    z-index: 1; /* keep text above gradient */
+}
+
+.login-container button:hover {
+    color: white; /* switch text to white when gradient covers */
 }
 

@@ -9,14 +9,17 @@
     <link rel="stylesheet" href="stud-login.css">
 </head>
 <body>
-<div class="content">
-    <a href="teacher-login.php">
-        <img src="assets/signinbtn.png" alt="Sign In" class="signin-img">
-    </a>
-    <img src="assets/rightarr.png" alt="Right Arrow" class="rightarr-img">
-    <img src="assets/leftarr.png" alt="Left Arrow" class="leftarr-img">
-</div>
 
+ <div class="login-container">
+        <a href="index.php">
+            <img src="assets/lars.png" alt="LARS Logo" class="lars-img">
+        </a>
+        <form>
+            <input type="email" placeholder="Email" required>
+            <input type="password" placeholder="Password" required>
+            <button type="submit"><span>Login</span></button>
+        </form>
+    </div>
 
 </body>
 </html>
