@@ -1,11 +1,32 @@
+<?php
+// Database connection
+$conn = new mysqli('localhost', 'root', '', 'lars_db');
+if ($conn->connect_error) {
+  die('Connection failed: ' . $conn->connect_error);
+}
+
+// Get teacher count
+$teacherCount = 0;
+$result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role_id = 3");
+if ($result && $row = $result->fetch_assoc()) {
+  $teacherCount = $row['cnt'];
+}
+
+// Get student count
+$studentCount = 0;
+$result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role_id = 4");
+if ($result && $row = $result->fetch_assoc()) {
+  $studentCount = $row['cnt'];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="staff-dashboard.css">
-    <title>Staff Dashboard</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="staff-dashboard.css">
+  <title>Staff Dashboard</title>
 </head>
 <body>
     <nav class="sidebar">
@@ -55,17 +76,40 @@
     <div class="stats-container">
         <div class="stat">
             <div class="stat-content">
-                <h1>0</h1>
+        <h1><?= $teacherCount ?></h1>
                 <h3>Teachers</h3>
             </div>
         </div>
 
         <div class="stat">
             <div class="stat-content">
-                <h1>0</h1>
+        <h1><?= $studentCount ?></h1>
                 <h3>Student</h3>
             </div>
         </div>
+  </div>
+
+  <?php
+  // Database connection
+  $conn = new mysqli('localhost', 'root', '', 'lars_db');
+  if ($conn->connect_error) {
+    die('Connection failed: ' . $conn->connect_error);
+  }
+
+  // Get teacher count
+  $teacherCount = 0;
+  $result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role_id = 3");
+  if ($result && $row = $result->fetch_assoc()) {
+    $teacherCount = $row['cnt'];
+  }
+
+  // Get student count
+  $studentCount = 0;
+  $result = $conn->query("SELECT COUNT(*) as cnt FROM users WHERE role_id = 4");
+  if ($result && $row = $result->fetch_assoc()) {
+    $studentCount = $row['cnt'];
+  }
+  ?>
 
     </div>
 

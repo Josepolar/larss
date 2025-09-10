@@ -58,44 +58,84 @@
     </nav>
 
    <section class="home" id="home-section">
-    
+    <?php
+    // Database connection
+    $conn = new mysqli('localhost', 'root', '', 'lars_db');
+    if ($conn->connect_error) {
+        die('Connection failed: ' . $conn->connect_error);
+    }
+
+    // Get total number of students
+    $countQuery = "SELECT COUNT(*) as total FROM users WHERE role_id = 4";
+    $countResult = $conn->query($countQuery);
+    $totalStudents = $countResult->fetch_assoc()['total'];
+    ?>
 
     <div class="stats-container">
+        <div class="stat-card">
+            <h3>Total Students</h3>
+            <p><?php echo $totalStudents; ?></p>
+        </div>
     </div>
 
+    <div class="table-container">
+        <div class="table_responsive">
+            <h1>STUDENT CREDENTIALS</h1>
+            <hr>
+        </div>
 
-        <div class="table-container">
-            <div class="table_responsive">
-                <h1>STUDENT CREDENTIALS</h1>
-                <hr>
-            </div>
-
+        <div class="grade-filters">
+            <button class="filter-btn active" data-grade="all">All Grades</button>
+            <button class="filter-btn" data-grade="7">Grade 7</button>
+            <button class="filter-btn" data-grade="8">Grade 8</button>
+            <button class="filter-btn" data-grade="9">Grade 9</button>
+            <button class="filter-btn" data-grade="10">Grade 10</button>
+        </div>
             
-             <div class="table_responsive">
-    <table>
-        <tr>
-            <th>Email</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Section</th>
-            <th>Grade Level</th>
-            <th>Password</th>
-            <th>Actions</th>
-        </tr>
-        <tr>
-            <td>example@email.com</td>
-            <td>John</td>
-            <td>Doe</td>
-            <td>Section A</td>
-            <td>10</td>
-            <td>••••••</td>
-            <td>
-                <button class="edit-btn">Edit</button>
-                <button class="delete-btn">Delete</button>
-            </td>
-        </tr>
-    </table>
-</div>
+        <div class="table_responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Username</th>
+                        <th>Grade Level</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="student-list">
+                    <?php
+                    // Fetch students
+                    $query = "SELECT user_id, email, first_name, last_name, username, grade_level 
+                             FROM users 
+                             WHERE role_id = 4 
+                             ORDER BY grade_level, last_name, first_name";
+                    $result = $conn->query($query);
+
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<tr data-grade='{$row['grade_level']}'>";
+                            echo "<td>" . htmlspecialchars($row['user_id']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['first_name']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['last_name']) . "</td>";
+                            echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                            echo "<td>Grade " . htmlspecialchars($row['grade_level']) . "</td>";
+                            echo "<td>";
+                            echo "<button class='edit-btn' onclick='openEditModal({$row['user_id']})'>Edit</button>";
+                            echo "<button class='delete-btn' onclick='deleteStudent({$row['user_id']})'>Delete</button>";
+                            echo "</td>";
+                            echo "</tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='7' class='no-data'>No students found</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
 
 
 
