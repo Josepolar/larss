@@ -44,3 +44,9 @@ INSERT INTO roles (role_name) VALUES
 -- Create an admin user (password: admin123)
 INSERT INTO users (username, password, email, role_id, first_name, last_name) VALUES 
 ('admin', '$2y$10$YourHashedPasswordHere', 'admin@larss.com', 1, 'System', 'Administrator');
+
+-- Insert sample user logs
+INSERT INTO user_logs (user_id, action, action_timestamp, ip_address) VALUES 
+(1, 'Login', '2025-09-11 09:00:00', '127.0.0.1'),
+(1, 'View Dashboard', '2025-09-11 09:01:00', '127.0.0.1'),
+(1, 'Logout', '2025-09-11 10:00:00', '127.0.0.1');

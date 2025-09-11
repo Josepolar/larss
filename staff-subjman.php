@@ -1,3 +1,74 @@
+<?php
+// Database connection
+$conn = new mysqli('localhost', 'root', '', 'lars_db');
+if ($conn->connect_error) {
+    die('Connection failed: ' . $conn->connect_error);
+}
+
+// Handle Add Subject
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_subject'])) {
+    $subject_name = $conn->real_escape_string($_POST['subject_name']);
+    $grade_level = $conn->real_escape_string($_POST['grade_level']);
+    
+    $sql = "INSERT INTO subjects (subject_name, grade_level) VALUES ('$subject_name', '$grade_level')";
+    if ($conn->query($sql)) {
+        echo "<script>alert('Subject added successfully!');</script>";
+    } else {
+        echo "<script>alert('Error adding subject: " . $conn->error . "');</script>";
+    }
+}
+
+// Handle Delete Subject
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_subject'])) {
+    $subject_id = $conn->real_escape_string($_POST['subject_id']);
+    
+    // Start transaction
+    $conn->begin_transaction();
+    
+    try {
+        // First delete from teacher_subjects
+        $sql1 = "DELETE FROM teacher_subjects WHERE subject_id = '$subject_id'";
+        $conn->query($sql1);
+        
+        // Then delete the subject
+        $sql2 = "DELETE FROM subjects WHERE subject_id = '$subject_id'";
+        $conn->query($sql2);
+        
+        $conn->commit();
+        echo "<script>alert('Subject deleted successfully!');</script>";
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo "<script>alert('Error deleting subject: " . $conn->error . "');</script>";
+    }
+}
+
+// Handle Assign Subject
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign_subject'])) {
+    $teacher_id = $conn->real_escape_string($_POST['teacher_id']);
+    $subject_id = $conn->real_escape_string($_POST['subject_id']);
+    
+    // Check if assignment already exists
+    $check = $conn->query("SELECT * FROM teacher_subjects WHERE teacher_id = '$teacher_id' AND subject_id = '$subject_id'");
+    if ($check->num_rows > 0) {
+        echo "<script>alert('This teacher is already assigned to this subject!');</script>";
+    } else {
+        $sql = "INSERT INTO teacher_subjects (teacher_id, subject_id) VALUES ('$teacher_id', '$subject_id')";
+        if ($conn->query($sql)) {
+            echo "<script>alert('Subject assigned successfully!');</script>";
+        } else {
+            echo "<script>alert('Error assigning subject: " . $conn->error . "');</script>";
+        }
+    }
+}
+
+// Get all teachers
+$teacherQuery = "SELECT user_id, first_name, last_name FROM users WHERE role_id = 3 ORDER BY last_name";
+$teachers = $conn->query($teacherQuery);
+
+// Get all subjects
+$subjectQuery = "SELECT * FROM subjects ORDER BY grade_level, subject_name";
+$subjects = $conn->query($subjectQuery);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,21 +144,21 @@
     <div class="modal-content">
         <span class="close" onclick="closeModal('subjectModal')">&times;</span>
         <h2>Add Subject</h2>
-        <form>
+        <form method="POST" action="">
             <label>Subject Name</label>
-            <input type="text" placeholder="Enter subject name">
+            <input type="text" name="subject_name" placeholder="Enter subject name" required>
 
             <label>Grade Level</label>
-            <select>
+            <select name="grade_level" required>
                 <option value="" disabled selected>Select grade level</option>
-                <option>Grade 7</option>
-                <option>Grade 8</option>
-                <option>Grade 9</option>
-                <option>Grade 10</option>
+                <option value="7">Grade 7</option>
+                <option value="8">Grade 8</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
             </select>
 
             <div class="modal-footer">
-                <button type="button" class="create-btn">Create</button>
+                <button type="submit" name="add_subject" class="create-btn">Create</button>
             </div>
         </form>
     </div>
@@ -98,25 +169,33 @@
     <div class="modal-content">
         <span class="close" onclick="closeModal('assignModal')">&times;</span>
         <h2>Assign Subject</h2>
-        <form>
+        <form method="POST" action="">
             <label>Teacher</label>
-            <select>
+            <select name="teacher_id" required>
                 <option value="" disabled selected>Select teacher</option>
-                <option>Mr. Smith</option>
-                <option>Ms. Johnson</option>
-                <option>Mrs. Lee</option>
+                <?php while($teacher = $teachers->fetch_assoc()): ?>
+                    <option value="<?= $teacher['user_id'] ?>">
+                        <?= htmlspecialchars($teacher['first_name'] . ' ' . $teacher['last_name']) ?>
+                    </option>
+                <?php endwhile; ?>
             </select>
 
             <label>Subject</label>
-            <select>
+            <select name="subject_id" required>
                 <option value="" disabled selected>Select subject</option>
-                <option>Mathematics</option>
-                <option>Science</option>
-                <option>English</option>
+                <?php 
+                // Reset the subjects result pointer
+                $subjects->data_seek(0);
+                while($subject = $subjects->fetch_assoc()): 
+                ?>
+                    <option value="<?= $subject['subject_id'] ?>">
+                        <?= htmlspecialchars($subject['subject_name']) ?> (Grade <?= $subject['grade_level'] ?>)
+                    </option>
+                <?php endwhile; ?>
             </select>
 
             <div class="modal-footer">
-                <button type="button" class="create-btn">Assign</button>
+                <button type="submit" name="assign_subject" class="create-btn">Assign</button>
             </div>
         </form>
     </div>
@@ -131,21 +210,6 @@
 
        <div class="table-container">
   <div class="table_responsive">
-
-    <!-- Top controls (right aligned) -->
-    <div class="controls">
-      <div class="dropdown">
-        <button class="dropbtn">Subject ▼</button>
-        <div class="dropdown-content">
-          <a>Subject 1</a>
-          <a>Subject 2</a>
-          <a>Subject 3</a>
-        </div>
-      </div>
-
-      <button class="filter-btn">Filter</button>
-    </div>
-
     <!-- Table -->
     <table>
       <thead>
@@ -153,17 +217,39 @@
           <th>Subject Name</th>
           <th>Grade Level</th>
           <th>Assigned Teacher</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>CTIC411</td>
-          <td>Grade 10</td>
-          <td>Sir Delizious</td>
-        </tr>
+        <?php
+        // Query to get subjects with assigned teachers
+        $query = "SELECT s.subject_id, s.subject_name, s.grade_level, 
+                        GROUP_CONCAT(CONCAT(u.first_name, ' ', u.last_name) SEPARATOR ', ') as teachers
+                 FROM subjects s
+                 LEFT JOIN teacher_subjects ts ON s.subject_id = ts.subject_id
+                 LEFT JOIN users u ON ts.teacher_id = u.user_id
+                 GROUP BY s.subject_id
+                 ORDER BY s.grade_level, s.subject_name";
+        
+        $result = $conn->query($query);
+        
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                echo "<tr>";
+                echo "<td>" . htmlspecialchars($row['subject_name']) . "</td>";
+                echo "<td>Grade " . htmlspecialchars($row['grade_level']) . "</td>";
+                echo "<td>" . ($row['teachers'] ? htmlspecialchars($row['teachers']) : 'No teacher assigned') . "</td>";
+                echo "<td class='action-btns'>
+                        <button onclick=\"deleteSubject(" . $row['subject_id'] . ")\" class='delete-btn'>Delete</button>
+                      </td>";
+                echo "</tr>";
+            }
+        } else {
+            echo "<tr><td colspan='4' style='text-align: center;'>No subjects found</td></tr>";
+        }
+        ?>
       </tbody>
     </table>
-
   </div>
 </div>
 

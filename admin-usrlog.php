@@ -70,44 +70,46 @@
                 <hr>
             </div>
 
-            <div class="dropdown">
-        <button class="dropbtn">Sections &nbsp; &nbsp; ▼</button>
-        <div class="dropdown-content">
-            <a>Section 1</a>
-            <a>Section 2</a>
-            <a>Section 3</a>
-        </div>
-    </div>
-
-            
-             <div class="table_responsive">
-    <table>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Grade Level</th>
-            <th>Section</th>
-            <th>Academic Year</th>
-            <th>Login</th>
-            <th>Logout</th>
-        </tr>
-        <tr>
-            <td>Jose</td>
-            <td>Fernandez</td>
-            <td>10</td>
-            <td>Section A</td>
-            <td>2025-2026</td>
-            <td>Last Login at [Time]</td>
-            <td>Last Logout at [Time]</td>
-        </tr>
-    </table>
-</div>
-
-
-
-                <div class="table_responsive">
-                <h1></h1>
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <button id="prevMonth" class="calendar-nav-btn">&lt;</button>
+                    <h2 id="monthDisplay"></h2>
+                    <button id="nextMonth" class="calendar-nav-btn">&gt;</button>
+                </div>
+                <div class="weekdays">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+                <div id="calendar" class="calendar-grid"></div>
             </div>
+
+            <!-- Daily Logs Modal -->
+            <div id="logsModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <h2 id="selectedDate">User Logs for </h2>
+                    <div class="table_responsive">
+                        <table id="dailyLogsTable">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Action</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dailyLogsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+</div>
                 
 
 

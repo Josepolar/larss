@@ -404,6 +404,46 @@ tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
+/* Action buttons styling */
+.action-btns {
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+.edit-btn {
+    background: #004b9c;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.edit-btn:hover {
+    background: #00387a;
+    transform: scale(1.05);
+}
+
 
 /*----------------------------------MODAL*/
 
