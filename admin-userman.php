@@ -31,10 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Add
         if ($firstname && $lastname && $role_id) {
             $email = $email ?: strtolower($firstname . '.' . $lastname . '@email.com');
-            $password = $password ?: substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
+            $plainPassword = $password ?: substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
             $username = strtolower($firstname . $lastname . rand(1000,9999));
             $stmt = $conn->prepare("INSERT INTO users (username, password, email, role_id, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('sssiss', $username, $password, $email, $role_id, $firstname, $lastname);
+            $stmt->bind_param('sssiss', $username, $plainPassword, $email, $role_id, $firstname, $lastname);
             $stmt->execute();
             $stmt->close();
             header('Location: admin-userman.php');
@@ -77,6 +77,41 @@ while ($row = $result->fetch_assoc()) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="admin-userman.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .password-container {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+        .password-field {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .password-field input {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            font-family: 'Consolas', monospace;
+        }
+        .toggle-password {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #6c757d;
+        }
+        .toggle-password:hover {
+            color: #495057;
+        }
+    </style>
     <title>Admin Dashboard</title>
 </head>
 <body>
@@ -123,7 +158,7 @@ while ($row = $result->fetch_assoc()) {
 
             <div class="bottom-content">
             <li class="nav-link">
-                        <button class="tablinks"><a href="logout_admin.php" class="tablinks">Logout</a></button>
+                        <button class="tablinks"><a href="logout.php" class="tablinks">Logout</a></button>
                     </li>
             </div>
         </div>
@@ -177,6 +212,17 @@ while ($row = $result->fetch_assoc()) {
             <label>Lastname</label>
             <input type="text" name="lastname" placeholder="Enter lastname" required>
 
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Enter email">
+
+            <label>Password</label>
+            <div class="password-container">
+                <input type="password" name="password" id="staffPassword" placeholder="Enter password">
+                <span class="password-toggle" onclick="togglePasswordVisibility('staffPassword')">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
+
             <div class="modal-footer">
                 <button type="submit" class="create-btn">Create</button>
             </div>
@@ -202,8 +248,13 @@ while ($row = $result->fetch_assoc()) {
             <label>Email</label>
             <input type="email" name="email" id="editStaffEmail" required>
 
-            <label>Password</label>
-            <input type="text" name="password" id="editStaffPassword" required>
+            <label>Password (Leave empty to keep current)</label>
+            <div class="password-container">
+                <input type="password" name="password" id="editStaffPassword">
+                <span class="password-toggle" onclick="togglePasswordVisibility('editStaffPassword')">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
 
             <div class="modal-footer">
                 <button type="submit" class="create-btn">Update</button>
@@ -225,6 +276,17 @@ while ($row = $result->fetch_assoc()) {
 
             <label>Lastname</label>
             <input type="text" name="lastname" placeholder="Enter lastname" required>
+
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Enter email">
+
+            <label>Password</label>
+            <div class="password-container">
+                <input type="password" name="password" id="teacherPassword" placeholder="Enter password">
+                <span class="password-toggle" onclick="togglePasswordVisibility('teacherPassword')">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
 
             <div class="modal-footer">
                 <button type="submit" class="create-btn">Create</button>
@@ -251,8 +313,13 @@ while ($row = $result->fetch_assoc()) {
             <label>Email</label>
             <input type="email" name="email" id="editTeacherEmail" required>
 
-            <label>Password</label>
-            <input type="text" name="password" id="editTeacherPassword" required>
+            <label>Password (Leave empty to keep current)</label>
+            <div class="password-container">
+                <input type="password" name="password" id="editTeacherPassword">
+                <span class="password-toggle" onclick="togglePasswordVisibility('editTeacherPassword')">
+                    <i class="fas fa-eye"></i>
+                </span>
+            </div>
 
             <div class="modal-footer">
                 <button type="submit" class="create-btn">Update</button>
@@ -289,7 +356,14 @@ while ($row = $result->fetch_assoc()) {
                                     <td><?= htmlspecialchars($user['first_name']) ?></td>
                                     <td><?= htmlspecialchars($user['last_name']) ?></td>
                                     <td><?= htmlspecialchars($user['email']) ?></td>
-                                    <td><?= htmlspecialchars($user['password']) ?></td>
+                                    <td>
+                                        <div class='password-field'>
+                                            <input type='password' value='<?= htmlspecialchars($user['password']) ?>' readonly>
+                                            <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                                <i class='fas fa-eye'></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td>
                                         <button class="btn edit-btn" onclick="editEntry('user', <?= $user['user_id'] ?>)">Edit</button>
                                         <button class="btn delete-btn" onclick="confirmDelete('user', <?= $user['user_id'] ?>)">Delete</button>
@@ -320,7 +394,14 @@ while ($row = $result->fetch_assoc()) {
                                     <td><?= htmlspecialchars($teacher['first_name']) ?></td>
                                     <td><?= htmlspecialchars($teacher['last_name']) ?></td>
                                     <td><?= htmlspecialchars($teacher['email']) ?></td>
-                                    <td><?= htmlspecialchars($teacher['password']) ?></td>
+                                    <td>
+                                        <div class='password-field'>
+                                            <input type='password' value='<?= htmlspecialchars($teacher['password']) ?>' readonly>
+                                            <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                                <i class='fas fa-eye'></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td>
                                         <button class="btn edit-btn" onclick="editEntry('teacher', <?= $teacher['user_id'] ?>)">Edit</button>
                                         <button class="btn delete-btn" onclick="confirmDelete('teacher', <?= $teacher['user_id'] ?>)">Delete</button>
@@ -362,7 +443,7 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('editStaffFirstname').value = user.first_name;
             document.getElementById('editStaffLastname').value = user.last_name;
             document.getElementById('editStaffEmail').value = user.email;
-            document.getElementById('editStaffPassword').value = user.password;
+            document.getElementById('editStaffPassword').value = '';
             document.getElementById('editStaffModal').style.display = 'block';
         } else {
             var teacher = teachers.find(function(t) { return t.user_id == userId; });
@@ -371,13 +452,43 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('editTeacherFirstname').value = teacher.first_name;
             document.getElementById('editTeacherLastname').value = teacher.last_name;
             document.getElementById('editTeacherEmail').value = teacher.email;
-            document.getElementById('editTeacherPassword').value = teacher.password;
+            document.getElementById('editTeacherPassword').value = '';
             document.getElementById('editTeacherModal').style.display = 'block';
         }
     }
 
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
+    }
+
+    function togglePasswordVisibility(inputId) {
+        const passwordInput = document.getElementById(inputId);
+        const icon = event.currentTarget.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function toggleTablePassword(button) {
+        const passwordInput = button.parentElement.querySelector('input');
+        const icon = button.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
     </script>
     <script src="admin-userman.js"></script>

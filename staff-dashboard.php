@@ -1,4 +1,12 @@
 <?php
+session_start();
+
+// Check if user is logged in and is staff
+if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 2) {
+    header("Location: staff-login.php");
+    exit();
+}
+
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {
@@ -39,7 +47,7 @@ if ($result && $row = $result->fetch_assoc()) {
 
                 <div class="text header-text">
                     <span class="profession">Staff Dashboard</span>
-                    <span class="name">Hello [NAME]</span>
+                    <span class="name">Hello <?php echo htmlspecialchars($_SESSION['name']); ?></span>
                 </div>
             </div>
             <hr>
@@ -65,7 +73,7 @@ if ($result && $row = $result->fetch_assoc()) {
 
             <div class="bottom-content">
             <li class="nav-link">
-                        <button class="tablinks"><a href="logout_admin.php" class="tablinks">Logout</a></button>
+                        <button class="tablinks"><a href="logout.php" class="tablinks">Logout</a></button>
                     </li>
             </div>
         </div>

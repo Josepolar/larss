@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Check if user is logged in and is staff
+if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 2) {
+    header("Location: staff-login.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +50,7 @@
 
                 <div class="text header-text">
                     <span class="profession">Staff Dashboard</span>
-                    <span class="name">Hello [NAME]</span>
+                    <span class="name">Hello <?php echo htmlspecialchars($_SESSION['name']); ?></span>
                 </div>
             </div>
             <hr>
@@ -67,7 +76,7 @@
 
             <div class="bottom-content">
             <li class="nav-link">
-                        <button class="tablinks"><a href="logout_admin.php" class="tablinks">Logout</a></button>
+                        <button class="tablinks"><a href="logout.php" class="tablinks">Logout</a></button>
                     </li>
             </div>
         </div>
@@ -96,7 +105,7 @@
         $username = $conn->real_escape_string($_POST['teacher_username'] ?? '');
         // Create email based on username
         $email = $username . "@lars.edu.ph";
-        $password = password_hash($_POST['teacher_password'] ?? '', PASSWORD_DEFAULT);
+        $password = $_POST['teacher_password'] ?? '';  // Store password as plain text
         $role_id = 3; // Teacher
 
         // Check if username already exists
@@ -159,7 +168,7 @@
         } else {
             $password_sql = "";
             if (!empty($_POST['edit_password'])) {
-                $password = password_hash($_POST['edit_password'], PASSWORD_DEFAULT);
+                $password = $_POST['edit_password'];  // Store password as plain text
                 $password_sql = ", password = '$password'";
             }
             
@@ -210,7 +219,7 @@
                         $lname = $conn->real_escape_string($data[1]);
                         $username = $conn->real_escape_string($data[2]);
                         $email = $conn->real_escape_string($data[3]);
-                        $password = password_hash($data[4], PASSWORD_DEFAULT);
+                        $password = $data[4];  // Store password as plain text
                         $grade = $conn->real_escape_string($data[5]);
                         $role_id = 4;
                         
@@ -269,7 +278,7 @@
         $username = $conn->real_escape_string($_POST['student_username'] ?? '');
         // Create email based on username
         $email = $username . "@lars.edu.ph";
-        $password = password_hash($_POST['student_password'] ?? '', PASSWORD_DEFAULT);
+        $password = $_POST['student_password'] ?? '';  // Store password as plain text
         $grade = $conn->real_escape_string($_POST['student_grade'] ?? '');
         $role_id = 4; // Student
         
@@ -440,7 +449,7 @@
     <!-- Teachers Table -->
     <div class="table_responsive" style="flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div class="controls">
-            <h3>Registered Teachers (<?= $teacherCount ?>)</h3>
+            <h3 style="cursor: pointer;" onclick="openModal('teacherTableModal')">Registered Teachers (<?= $teacherCount ?>)</h3>
             <button class="stat-btn" onclick="openModal('teacherModal')">ADD TEACHER</button>
         </div>
         <table style="width: 100%;">
@@ -449,13 +458,14 @@
                     <th>Teacher Name</th>
                     <th>Email</th>
                     <th>Username</th>
+                    <th>Password</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 // Fetch teachers
-                $teacherQuery = "SELECT user_id, first_name, last_name, email, username FROM users WHERE role_id = 3 ORDER BY last_name";
+                $teacherQuery = "SELECT user_id, first_name, last_name, email, username, password FROM users WHERE role_id = 3 ORDER BY last_name";
                 $teacherResult = $conn->query($teacherQuery);
                 if ($teacherResult && $teacherResult->num_rows > 0) {
                     while ($row = $teacherResult->fetch_assoc()) {
@@ -463,6 +473,12 @@
                         echo "<td>" . htmlspecialchars($row['first_name'] . " " . $row['last_name']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['email']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                        echo "<td><div class='password-field'>
+                                <input type='password' value='" . htmlspecialchars($row['password']) . "' readonly>
+                                <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                    <i class='fas fa-eye'></i>
+                                </button>
+                              </div></td>";
                         echo "<td style='white-space: nowrap;'>
                                 <button onclick=\"openEditModal('teacher', {$row['user_id']})\" class='action-btn edit-btn'>Edit</button>
                                 <button onclick=\"if(confirm('Are you sure you want to delete this teacher?')) deleteUser('teacher', {$row['user_id']})\" class='action-btn delete-btn'>Delete</button>
@@ -480,7 +496,7 @@
     <!-- Students Table -->
     <div class="table_responsive" style="flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div class="controls">
-            <h3>Registered Students (<?= $studentCount ?>)</h3>
+            <h3 style="cursor: pointer;" onclick="openModal('studentTableModal')">Registered Students (<?= $studentCount ?>)</h3>
             <button class="stat-btn" onclick="openModal('studentModal')">ADD STUDENT</button>
         </div>
         <div class="grade-filters">
@@ -497,13 +513,14 @@
                     <th>Grade</th>
                     <th>Username</th>
                     <th>Email</th>
+                    <th>Password</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody class="student-list">
                 <?php
                 // Fetch students
-                $studentQuery = "SELECT user_id, first_name, last_name, username, grade_level FROM users WHERE role_id = 4 ORDER BY grade_level, last_name";
+                $studentQuery = "SELECT user_id, first_name, last_name, username, grade_level, password FROM users WHERE role_id = 4 ORDER BY grade_level, last_name";
                 $studentResult = $conn->query($studentQuery);
                 if ($studentResult && $studentResult->num_rows > 0) {
                     while ($row = $studentResult->fetch_assoc()) {
@@ -514,6 +531,12 @@
                         echo "<td>Grade " . htmlspecialchars($row['grade_level']) . "</td>";
                         echo "<td><span class='user-credential'>" . htmlspecialchars($row['username']) . "</span></td>";
                         echo "<td><span class='user-credential'>" . htmlspecialchars($email) . "</span></td>";
+                        echo "<td><div class='password-field'>
+                                <input type='password' value='" . htmlspecialchars($row['password']) . "' readonly>
+                                <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                    <i class='fas fa-eye'></i>
+                                </button>
+                              </div></td>";
                         echo "<td style='white-space: nowrap;'>
                                 <button onclick=\"openEditModal('student', {$row['user_id']})\" class='action-btn edit-btn'>Edit</button>
                                 <button onclick=\"if(confirm('Are you sure you want to delete this student?')) deleteUser('student', {$row['user_id']})\" class='action-btn delete-btn'>Delete</button>
@@ -598,7 +621,282 @@
                 icon.classList.add('fa-eye');
             }
         }
+
+        function toggleTablePassword(button) {
+            const passwordInput = button.parentElement.querySelector('input');
+            const icon = button.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function searchTeachers(searchText) {
+            const tableBody = document.querySelector('#teacherTableModal tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            searchText = searchText.toLowerCase();
+            
+            let hasResults = false;
+
+            for (let row of rows) {
+                const name = row.cells[0].textContent.toLowerCase();
+                const username = row.cells[2].textContent.toLowerCase();
+                
+                if (name.includes(searchText) || username.includes(searchText)) {
+                    row.style.display = '';
+                    hasResults = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            // Show/hide no results message
+            let noResults = tableBody.querySelector('.no-results');
+            if (!hasResults) {
+                if (!noResults) {
+                    noResults = document.createElement('tr');
+                    noResults.className = 'no-results';
+                    noResults.innerHTML = '<td colspan="5">No matching teachers found</td>';
+                    tableBody.appendChild(noResults);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        }
+
+        function searchStudents(searchText) {
+            const tableBody = document.querySelector('#studentTableModal tbody');
+            const rows = tableBody.getElementsByTagName('tr');
+            searchText = searchText.toLowerCase();
+            
+            let hasResults = false;
+
+            for (let row of rows) {
+                const name = row.cells[0].textContent.toLowerCase();
+                const grade = row.cells[1].textContent.toLowerCase();
+                const username = row.cells[2].textContent.toLowerCase();
+                
+                if (name.includes(searchText) || grade.includes(searchText) || username.includes(searchText)) {
+                    row.style.display = '';
+                    hasResults = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+
+            // Show/hide no results message
+            let noResults = tableBody.querySelector('.no-results');
+            if (!hasResults) {
+                if (!noResults) {
+                    noResults = document.createElement('tr');
+                    noResults.className = 'no-results';
+                    noResults.innerHTML = '<td colspan="6">No matching students found</td>';
+                    tableBody.appendChild(noResults);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        }
     </script>
+    <style>
+        .password-field {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .password-field input {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            font-family: 'Consolas', monospace;
+        }
+        .toggle-password {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #6c757d;
+        }
+        .toggle-password:hover {
+            color: #495057;
+        }
+        .table-modal .modal-content {
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .search-container {
+            margin: 20px 0;
+            padding: 0 10px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .modal h3:hover {
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .table-modal table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .modal-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        /* Add a pointing cursor to the clickable headers */
+        h3[onclick] {
+            cursor: pointer;
+        }
+        h3[onclick]:hover {
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+
+    <!-- Teacher Table Modal -->
+    <div id="teacherTableModal" class="modal table-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registered Teachers</h2>
+                <span class="close" onclick="closeModal('teacherTableModal')">&times;</span>
+            </div>
+            <div class="search-container">
+                <input type="text" id="teacherSearch" placeholder="Search by name..." onkeyup="searchTeachers(this.value)">
+            </div>
+            <div class="modal-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Teacher Name</th>
+                            <th>Email</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        // Reset the teacher result pointer
+                        $teacherResult->data_seek(0);
+                        if ($teacherResult && $teacherResult->num_rows > 0) {
+                            while ($row = $teacherResult->fetch_assoc()) {
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($row['first_name'] . " " . $row['last_name']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['email']) . "</td>";
+                                echo "<td>" . htmlspecialchars($row['username']) . "</td>";
+                                echo "<td><div class='password-field'>
+                                        <input type='password' value='" . htmlspecialchars($row['password']) . "' readonly>
+                                        <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                            <i class='fas fa-eye'></i>
+                                        </button>
+                                      </div></td>";
+                                echo "<td style='white-space: nowrap;'>
+                                        <button onclick=\"openEditModal('teacher', {$row['user_id']})\" class='action-btn edit-btn'>Edit</button>
+                                        <button onclick=\"if(confirm('Are you sure you want to delete this teacher?')) deleteUser('teacher', {$row['user_id']})\" class='action-btn delete-btn'>Delete</button>
+                                      </td>";
+                                echo "</tr>";
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Table Modal -->
+    <div id="studentTableModal" class="modal table-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registered Students</h2>
+                <span class="close" onclick="closeModal('studentTableModal')">&times;</span>
+            </div>
+            <div class="search-container">
+                <input type="text" id="studentSearch" placeholder="Search by name or grade level..." onkeyup="searchStudents(this.value)">
+            </div>
+            <div class="grade-filters" style="margin: 20px 0;">
+                <button class="filter-btn active" data-grade="all">All Grades</button>
+                <button class="filter-btn" data-grade="7">Grade 7</button>
+                <button class="filter-btn" data-grade="8">Grade 8</button>
+                <button class="filter-btn" data-grade="9">Grade 9</button>
+                <button class="filter-btn" data-grade="10">Grade 10</button>
+            </div>
+            <div class="modal-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Grade</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Password</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="student-list">
+                        <?php
+                        // Reset the student result pointer
+                        $studentResult->data_seek(0);
+                        if ($studentResult && $studentResult->num_rows > 0) {
+                            while ($row = $studentResult->fetch_assoc()) {
+                                $email = $row['username'] . "@lars.edu.ph";
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($row['first_name'] . " " . $row['last_name']) . "</td>";
+                                echo "<td>Grade " . htmlspecialchars($row['grade_level']) . "</td>";
+                                echo "<td><span class='user-credential'>" . htmlspecialchars($row['username']) . "</span></td>";
+                                echo "<td><span class='user-credential'>" . htmlspecialchars($email) . "</span></td>";
+                                echo "<td><div class='password-field'>
+                                        <input type='password' value='" . htmlspecialchars($row['password']) . "' readonly>
+                                        <button class='toggle-password' onclick='toggleTablePassword(this)'>
+                                            <i class='fas fa-eye'></i>
+                                        </button>
+                                      </div></td>";
+                                echo "<td style='white-space: nowrap;'>
+                                        <button onclick=\"openEditModal('student', {$row['user_id']})\" class='action-btn edit-btn'>Edit</button>
+                                        <button onclick=\"if(confirm('Are you sure you want to delete this student?')) deleteUser('student', {$row['user_id']})\" class='action-btn delete-btn'>Delete</button>
+                                      </td>";
+                                echo "</tr>";
+                            }
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
  

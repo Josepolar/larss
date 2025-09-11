@@ -100,3 +100,15 @@ body {
     transform: translateY(0);
     box-shadow: 0 3px 8px rgba(0, 75, 156, 0.3);
 }
+
+/* Error message */
+.error-message {
+    background-color: #ffe6e6;
+    color: #dc3545;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #ffcccc;
+    text-align: center;
+}
