@@ -1,43 +1,34 @@
 <?php
 session_start();
 // Check if user is already logged in
-if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == 2) { // role_id 2 is for staff
+if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2) {
     header("Location: staff-dashboard.php");
     exit();
 }
-// Database connection
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
 }
 $error = '';
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $conn->real_escape_string($_POST['email']);
     $password = $_POST['password'];
-
-    // Check for user with staff role (role_id = 2)
-    $query = "SELECT user_id, password, first_name, last_name FROM users 
-              WHERE email = ? AND role_id = 2";
-    
+    $query = "SELECT user_id, password, first_name, last_name FROM users WHERE email = ? AND role_id = 2";
     $stmt = $conn->prepare($query);
     $stmt->bind_param('s', $email);
     $stmt->execute();
     $result = $stmt->get_result();
-
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
-        // Try direct comparison first since passwords might not be hashed yet
         if ($password === $user['password'] || password_verify($password, $user['password'])) {
-            // Password is correct, create session
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['role_id'] = 2;
             $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
-            // Log the login action
             $log_query = "INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, 'Login', ?)";
             $log_stmt = $conn->prepare($log_query);
             $ip = $_SERVER['REMOTE_ADDR'];
             $log_stmt->bind_param('is', $user['user_id'], $ip);
+// ...existing code...
             $log_stmt->execute();
             $log_stmt->close();
             header("Location: staff-dashboard.php");

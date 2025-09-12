@@ -1,4 +1,11 @@
-
+<?php
+session_start();
+// Redirect to login if session is missing or expired
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['role_id'] != 3) {
+    header('Location: teacher-login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

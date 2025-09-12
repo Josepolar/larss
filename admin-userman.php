@@ -1,5 +1,10 @@
 <?php
 session_start();
+// Redirect to login if session is missing or expired
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['role_id'] != 1) {
+    header('Location: admin-login.php');
+    exit();
+}
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {

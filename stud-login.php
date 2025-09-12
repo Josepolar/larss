@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LARS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="stud-login.css">
-</head>
-<body>
-
 <?php
 session_start();
+// Redirect to dashboard if already logged in
+if (isset($_SESSION['user_id']) && isset($_SESSION['role_id']) && $_SESSION['role_id'] == 4) {
+    header('Location: stud-dashboard.php');
+    exit();
+}
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
@@ -37,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $ip = $_SERVER['REMOTE_ADDR'];
             $log_stmt->bind_param('is', $user['user_id'], $ip);
             $log_stmt->execute();
+            $log_stmt->close();
             header("Location: stud-dashboard.php");
             exit();
         } else {
@@ -47,6 +41,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LARS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stud-login.css">
+</head>
+<body>
 <div class="login-container">
         <a href="index.php">
             <img src="assets/lars.png" alt="LARS Logo" class="lars-img">

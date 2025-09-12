@@ -1,9 +1,8 @@
 <?php
 session_start();
-
-// Check if user is logged in and is staff
-if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 2) {
-    header("Location: staff-login.php");
+// Redirect to login if session is missing or expired
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role_id']) || $_SESSION['role_id'] != 2) {
+    header('Location: staff-login.php');
     exit();
 }
 ?>
