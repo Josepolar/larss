@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Check if user is logged in and is admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 1) {
+    header('Location: admin-login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +27,7 @@
 
                 <div class="text header-text">
                     <span class="profession">Admin Dashboard</span>
-                    <span class="name">Hello [NAME]</span>
+                    <span class="name">Hello <?php echo htmlspecialchars($_SESSION['name']); ?></span>
                 </div>
             </div>
             <hr>
@@ -52,7 +61,7 @@
 
             <div class="bottom-content">
             <li class="nav-link">
-                        <button class="tablinks"><a href="logout_admin.php" class="tablinks">Logout</a></button>
+                        <button class="tablinks"><a href="logout.php" class="tablinks">Logout</a></button>
                     </li>
             </div>
         </div>
@@ -121,10 +130,15 @@
         <div class="logs-container">
             <div class="timeline">
                 <?php
-                $query = "SELECT ul.*, u.username, u.first_name, u.last_name, r.role_name 
+                $query = "SELECT ul.*, 
+                         u1.username, u1.first_name, u1.last_name, r1.role_name,
+                         u2.first_name as affected_first_name, u2.last_name as affected_last_name,
+                         r2.role_name as affected_role_name
                          FROM user_logs ul 
-                         JOIN users u ON ul.user_id = u.user_id 
-                         JOIN roles r ON u.role_id = r.role_id 
+                         JOIN users u1 ON ul.user_id = u1.user_id 
+                         JOIN roles r1 ON u1.role_id = r1.role_id 
+                         LEFT JOIN users u2 ON ul.affected_user_id = u2.user_id
+                         LEFT JOIN roles r2 ON u2.role_id = r2.role_id
                          ORDER BY ul.action_timestamp DESC 
                          LIMIT 100";
                 $result = $conn->query($query);
@@ -149,7 +163,20 @@
                             <div class="log-content">
                                 <span class="user-name"><?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?></span>
                                 <span class="user-role"><?php echo htmlspecialchars($row['role_name']); ?></span>
-                                <span class="log-action"><?php echo htmlspecialchars($row['action']); ?></span>
+                                <span class="log-action">
+                                    <?php
+                                    if ($row['action'] == 'Login' || $row['action'] == 'Logout') {
+                                        echo htmlspecialchars($row['action']);
+                                    } else if ($row['affected_first_name'] && $row['affected_last_name']) {
+                                        echo htmlspecialchars($row['action'] . ' ' . 
+                                             $row['affected_role_name'] . ': ' . 
+                                             $row['affected_first_name'] . ' ' . 
+                                             $row['affected_last_name']);
+                                    } else {
+                                        echo htmlspecialchars($row['action']);
+                                    }
+                                    ?>
+                                </span>
                             </div>
                         </div>
                         <?php

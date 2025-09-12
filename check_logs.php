@@ -21,7 +21,7 @@ try {
     }
 
     // Check if there are any logs for the given date
-    $query = "SELECT COUNT(*) as count FROM user_logs WHERE DATE(timestamp) = ?";
+    $query = "SELECT COUNT(*) as count FROM user_logs WHERE DATE(action_timestamp) = ?";
     
     $stmt = $conn->prepare($query);
     if (!$stmt) {

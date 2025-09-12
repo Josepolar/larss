@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {
@@ -36,7 +37,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO users (username, password, email, role_id, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sssiss', $username, $plainPassword, $email, $role_id, $firstname, $lastname);
             $stmt->execute();
+            $new_user_id = $stmt->insert_id;
             $stmt->close();
+
+            // Log the action
+            $admin_id = $_SESSION['user_id'];
+            $action = ($type === 'user') ? 'Added Staff' : 'Added Teacher';
+            $log_query = "INSERT INTO user_logs (user_id, action, affected_user_id, ip_address) VALUES (?, ?, ?, ?)";
+            $log_stmt = $conn->prepare($log_query);
+            $ip = $_SERVER['REMOTE_ADDR'];
+            $log_stmt->bind_param('isis', $admin_id, $action, $new_user_id, $ip);
+            $log_stmt->execute();
+            $log_stmt->close();
+
             header('Location: admin-userman.php');
             exit();
         }
@@ -58,6 +71,18 @@ if (isset($_GET['delete']) && isset($_GET['type'])) {
                 $stmt->bind_param('i', $user_id);
                 $stmt->execute();
                 $stmt->close();
+            }
+
+            // Log the delete action before deleting user_logs and user
+            if (isset($_SESSION['user_id'])) {
+                $admin_id = $_SESSION['user_id'];
+                $action = ($type === 'user') ? 'Deleted Staff' : 'Deleted Teacher';
+                $log_query = "INSERT INTO user_logs (user_id, action, affected_user_id, ip_address) VALUES (?, ?, ?, ?)";
+                $log_stmt = $conn->prepare($log_query);
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $log_stmt->bind_param('isis', $admin_id, $action, $user_id, $ip);
+                $log_stmt->execute();
+                $log_stmt->close();
             }
 
             // Then delete related records from user_logs

@@ -1,18 +1,15 @@
 <?php
 session_start();
-
 // Check if user is already logged in
 if (isset($_SESSION['user_id']) && $_SESSION['role_id'] == 3) { // role_id 3 is for teachers
     header("Location: teacher-dashboard.php");
     exit();
 }
-
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'lars_db');
 if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
 }
-
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -35,15 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['role_id'] = 3;
             $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
-
             // Log the login action
-            $log_query = "INSERT INTO user_logs (user_id, action, ip_address) 
-                         VALUES (?, 'Login', ?)";
+            $log_query = "INSERT INTO user_logs (user_id, action, ip_address) VALUES (?, 'Login', ?)";
             $log_stmt = $conn->prepare($log_query);
             $ip = $_SERVER['REMOTE_ADDR'];
             $log_stmt->bind_param('is', $user['user_id'], $ip);
             $log_stmt->execute();
-
+            $log_stmt->close();
             header("Location: teacher-dashboard.php");
             exit();
         } else {
