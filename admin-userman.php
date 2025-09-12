@@ -30,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Add
         if ($firstname && $lastname && $role_id) {
-            $email = $email ?: strtolower($firstname . '.' . $lastname . '@email.com');
-            $plainPassword = $password ?: substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
             $username = strtolower($firstname . $lastname . rand(1000,9999));
+            $email = $email ?: strtolower($username . '@lars.edu.ph');
+            $plainPassword = $password ?: substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
             $stmt = $conn->prepare("INSERT INTO users (username, password, email, role_id, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param('sssiss', $username, $plainPassword, $email, $role_id, $firstname, $lastname);
             $stmt->execute();
@@ -49,12 +49,38 @@ if (isset($_GET['delete']) && isset($_GET['type'])) {
     $role_id = ($type === 'user') ? 2 : (($type === 'teacher') ? 3 : 0);
     $user_id = intval($_GET['delete']);
     if ($user_id && $role_id) {
-        $stmt = $conn->prepare("DELETE FROM users WHERE user_id=? AND role_id=?");
-        $stmt->bind_param('ii', $user_id, $role_id);
-        $stmt->execute();
-        $stmt->close();
-        header('Location: admin-userman.php');
-        exit();
+        // Start transaction
+        $conn->begin_transaction();
+        try {
+            // First delete related records from teacher_subjects if it's a teacher
+            if ($role_id === 3) {
+                $stmt = $conn->prepare("DELETE FROM teacher_subjects WHERE teacher_id = ?");
+                $stmt->bind_param('i', $user_id);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            // Then delete related records from user_logs
+            $stmt = $conn->prepare("DELETE FROM user_logs WHERE user_id = ?");
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute();
+            $stmt->close();
+
+            // Finally delete the user
+            $stmt = $conn->prepare("DELETE FROM users WHERE user_id=? AND role_id=?");
+            $stmt->bind_param('ii', $user_id, $role_id);
+            $stmt->execute();
+            $stmt->close();
+
+            // Commit the transaction
+            $conn->commit();
+            header('Location: admin-userman.php');
+            exit();
+        } catch (Exception $e) {
+            // Rollback transaction on error
+            $conn->rollback();
+            $message = "Error: Unable to delete user. " . $e->getMessage();
+        }
     }
 }
 
@@ -204,7 +230,7 @@ while ($row = $result->fetch_assoc()) {
         <span class="close" onclick="closeModal('staffModal')">&times;</span>
         <h2>Add Staff</h2>
         <hr>
-        <form method="post">
+        <form method="post" onsubmit="return validateEmail(this)">
             <input type="hidden" name="type" value="user">
             <label>Firstname</label>
             <input type="text" name="firstname" placeholder="Enter firstname" required>
@@ -213,7 +239,9 @@ while ($row = $result->fetch_assoc()) {
             <input type="text" name="lastname" placeholder="Enter lastname" required>
 
             <label>Email</label>
-            <input type="email" name="email" placeholder="Enter email">
+            <input type="email" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="Will be generated as username@lars.edu.ph">
+            <small style="color: #6c757d; font-size: 0.875em;">Email will be automatically generated as username@lars.edu.ph</small>
+            <div class="email-error" style="color: #dc3545; display: none; font-size: 0.875em;">Please include an '@' in the email address.</div>
 
             <label>Password</label>
             <div class="password-container">
@@ -269,7 +297,7 @@ while ($row = $result->fetch_assoc()) {
         <span class="close" onclick="closeModal('teachersModal')">&times;</span>
         <h2>Add Teacher</h2>
         <hr>
-        <form method="post">
+        <form method="post" onsubmit="return validateEmail(this)">
             <input type="hidden" name="type" value="teacher">
             <label>Firstname</label>
             <input type="text" name="firstname" placeholder="Enter firstname" required>
@@ -278,7 +306,9 @@ while ($row = $result->fetch_assoc()) {
             <input type="text" name="lastname" placeholder="Enter lastname" required>
 
             <label>Email</label>
-            <input type="email" name="email" placeholder="Enter email">
+            <input type="email" name="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" placeholder="Will be generated as username@lars.edu.ph">
+            <small style="color: #6c757d; font-size: 0.875em;">Email will be automatically generated as username@lars.edu.ph</small>
+            <div class="email-error" style="color: #dc3545; display: none; font-size: 0.875em;">Please include an '@' in the email address.</div>
 
             <label>Password</label>
             <div class="password-container">
@@ -492,6 +522,21 @@ while ($row = $result->fetch_assoc()) {
     }
     </script>
     <script src="admin-userman.js"></script>
+    <script>
+    function validateEmail(form) {
+        const emailInput = form.querySelector('input[type="email"]');
+        const errorDiv = form.querySelector('.email-error');
+        
+        if (emailInput.value && !emailInput.value.includes('@')) {
+            errorDiv.style.display = 'block';
+            emailInput.focus();
+            return false;
+        }
+        
+        errorDiv.style.display = 'none';
+        return true;
+    }
+    </script>
 
 </body>
 </html>

@@ -130,6 +130,11 @@
             <hr>
         </div>
 
+        <div class="search-container">
+            <input type="text" id="studentSearch" placeholder="Search by name, email, or ID..." class="search-input">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+
         <div class="grade-filters">
             <button class="filter-btn active" data-grade="all">All Grades</button>
             <button class="filter-btn" data-grade="7">Grade 7</button>
@@ -252,6 +257,36 @@
     </div>
 
     <style>
+        .search-container {
+            margin: 20px 0;
+            position: relative;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #4a90e2;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -347,6 +382,22 @@
     </style>
 
     <script>
+        // Search functionality
+        document.getElementById('studentSearch').addEventListener('input', function(e) {
+            const searchValue = e.target.value.toLowerCase();
+            const studentRows = document.querySelectorAll('.student-list tr');
+            const currentGrade = document.querySelector('.filter-btn.active').dataset.grade;
+
+            studentRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const grade = row.dataset.grade;
+                const matchesSearch = text.includes(searchValue);
+                const matchesGrade = currentGrade === 'all' || grade === currentGrade;
+                
+                row.style.display = matchesSearch && matchesGrade ? '' : 'none';
+            });
+        });
+
         function openEditModal(userId) {
             // Fetch student data
             fetch(`get_student.php?id=${userId}`)
